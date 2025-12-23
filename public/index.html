@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>URLだけで使えるチャット</title>
+</head>
+<body>
+
+<h2>URL限定チャット</h2>
+
+<div id="log" style="border:1px solid #000; height:200px; overflow:auto;"></div>
+<input id="text" placeholder="メッセージ">
+<button onclick="send()">送信</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const log = document.getElementById("log");
+  const text = document.getElementById("text");
+
+  function send() {
+    if (text.value !== "") {
+      socket.emit("message", text.value);
+      text.value = "";
+    }
+  }
+
+  socket.on("message", (msg) => {
+    const p = document.createElement("p");
+    p.textContent = msg;
+    log.appendChild(p);
+  });
+</script>
+
+</body>
+</html>
