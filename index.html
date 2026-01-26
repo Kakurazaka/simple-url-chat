@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>シンプルチャット</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; background: #f4f4f4; }
+        #chat-box { height: 400px; overflow-y: auto; background: white; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .msg { margin-bottom: 10px; padding: 5px; border-bottom: 1px dotted #eee; }
+        .msg b { color: #007bff; }
+        #input-area { display: flex; gap: 5px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h3>💬 秘密のチャット</h3>
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="name" placeholder="名前" style="width: 80px;">
+        <input type="text" id="message" placeholder="メッセージを入力..." style="flex:1;">
+        <button onclick="send()">送信</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ⚠️ ここに自分のFirebaseの設定を貼り付けてください
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const col = collection(db, "messages");
+
+        // 送信処理
+        window.send = async () => {
+            const name = document.getElementById('name').value || "名無し";
+            const text = document.getElementById('message').value;
+            if(!text) return;
+            await addDoc(col, { name, text, time: serverTimestamp() });
+            document.getElementById('message').value = "";
+        };
+
+        // 受信（リアルタイム更新）
+        const q = query(col, orderBy("time", "asc"));
+        onSnapshot(q, (snapshot) => {
+            const box = document.getElementById('chat-box');
+            box.innerHTML = snapshot.docs.map(doc => {
+                const d = doc.data();
+                return `<div class="msg"><b>${d.name}</b>: ${d.text}</div>`;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        });
+    </script>
+</body>
+</html>
